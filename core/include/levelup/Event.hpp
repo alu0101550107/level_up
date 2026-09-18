@@ -13,7 +13,8 @@ namespace levelup {
 struct Event {
   int64_t id = 0;
   std::string title;
-  std::optional<std::string> time;         // "HH:MM", vacio = sin hora fija
+  std::optional<std::string> time;         // "HH:MM", vacio = sin hora fija (inicio)
+  std::optional<std::string> endTime;      // "HH:MM", vacio = sin hora de fin
   std::optional<int> dayOfWeek;            // 1=lunes..7=domingo (ISO 8601)
   std::optional<std::string> specificDate; // "YYYY-MM-DD"
 

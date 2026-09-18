@@ -18,9 +18,9 @@ void testCreateAndListWeeklyEvents() {
   db.migrate();
   EventRepository repo(db);
 
-  repo.createWeeklyEvent(1, "gimnasio", std::string("07:00"));
-  repo.createWeeklyEvent(1, "estudiar", std::nullopt);
-  repo.createWeeklyEvent(3, "compra", std::nullopt);
+  repo.createWeeklyEvent(1, "gimnasio", std::string("07:00"), std::string("08:00"));
+  repo.createWeeklyEvent(1, "estudiar", std::nullopt, std::nullopt);
+  repo.createWeeklyEvent(3, "compra", std::nullopt, std::nullopt);
 
   auto monday = repo.listWeeklyEvents(1);
   check(monday.size() == 2, "deberia haber 2 eventos recurrentes en lunes");
@@ -36,7 +36,7 @@ void testCreateOneOffEvent() {
   db.migrate();
   EventRepository repo(db);
 
-  repo.createOneOffEvent("2024-06-15", "cumpleanos", std::nullopt);
+  repo.createOneOffEvent("2024-06-15", "cumpleanos", std::nullopt, std::nullopt);
 
   auto events = repo.listOneOffEvents("2024-06-01", "2024-06-30");
   check(events.size() == 1, "deberia haber 1 evento puntual en el rango de junio");
@@ -50,9 +50,9 @@ void testEventsForDateMergesRecurringAndOneOff() {
   EventRepository repo(db);
 
   // 2024-01-01 es lunes (weekday ISO 1).
-  repo.createWeeklyEvent(1, "gimnasio", std::nullopt);
-  repo.createOneOffEvent("2024-01-01", "cita medica", std::nullopt);
-  repo.createWeeklyEvent(2, "otro dia", std::nullopt); // no deberia aparecer
+  repo.createWeeklyEvent(1, "gimnasio", std::nullopt, std::nullopt);
+  repo.createOneOffEvent("2024-01-01", "cita medica", std::nullopt, std::nullopt);
+  repo.createWeeklyEvent(2, "otro dia", std::nullopt, std::nullopt); // no deberia aparecer
 
   auto resolved = repo.eventsForDate("2024-01-01");
   check(resolved.size() == 2, "eventsForDate deberia mezclar recurrente + puntual de esa fecha");
@@ -65,7 +65,7 @@ void testCompletionIsPerConcreteDateNotPerTemplate() {
 
   // El requisito central del usuario: marcar "gimnasio" hecho el lunes 1
   // no deberia afectar al lunes 8 (misma plantilla semanal, dia_of_week=1).
-  int64_t eventId = repo.createWeeklyEvent(1, "gimnasio", std::nullopt);
+  int64_t eventId = repo.createWeeklyEvent(1, "gimnasio", std::nullopt, std::nullopt);
 
   repo.setCompletion(eventId, "2024-01-01", true);
 
@@ -90,7 +90,7 @@ void testDeleteEventCascadesCompletions() {
   db.migrate();
   EventRepository repo(db);
 
-  int64_t eventId = repo.createOneOffEvent("2024-01-01", "unico", std::nullopt);
+  int64_t eventId = repo.createOneOffEvent("2024-01-01", "unico", std::nullopt, std::nullopt);
   repo.setCompletion(eventId, "2024-01-01", true);
   check(repo.isDone(eventId, "2024-01-01"), "deberia estar marcado hecho antes de borrar");
 
@@ -107,8 +107,8 @@ void testMonthSummaryCombinesRecurringOneOffAndCompletions() {
   EventRepository repo(db);
 
   // Enero 2024: dias 1 y 8 son lunes.
-  int64_t recurringId = repo.createWeeklyEvent(1, "gimnasio", std::nullopt);
-  repo.createOneOffEvent("2024-01-01", "cita", std::nullopt);
+  int64_t recurringId = repo.createWeeklyEvent(1, "gimnasio", std::nullopt, std::nullopt);
+  repo.createOneOffEvent("2024-01-01", "cita", std::nullopt, std::nullopt);
   repo.setCompletion(recurringId, "2024-01-01", true);
 
   auto summaries = repo.monthSummary(2024, 1);
@@ -128,6 +128,30 @@ void testMonthSummaryCombinesRecurringOneOffAndCompletions() {
   check(jan8 != nullptr && jan8->doneEvents == 0, "2024-01-08 no deberia heredar el 'hecho' del 2024-01-01");
 }
 
+void testStartAndEndTimeRoundTrip() {
+  Database db(":memory:");
+  db.migrate();
+  EventRepository repo(db);
+
+  int64_t eventId =
+      repo.createWeeklyEvent(1, "reunion", std::string("09:00"), std::string("10:30"));
+
+  auto found = repo.findById(eventId);
+  check(found.has_value(), "el evento deberia existir");
+  check(found->time == "09:00", "deberia guardar la hora de inicio");
+  check(found->endTime == "10:30", "deberia guardar la hora de fin");
+
+  auto resolved = repo.eventsForDate("2024-01-01"); // 2024-01-01 es lunes
+  check(resolved.size() == 1 && resolved[0].event.endTime == "10:30",
+        "eventsForDate deberia devolver tambien la hora de fin");
+
+  // updateEvent puede quitar la hora de fin sin tocar la de inicio.
+  repo.updateEvent(eventId, "reunion", std::string("09:00"), std::nullopt);
+  auto updated = repo.findById(eventId);
+  check(updated.has_value() && updated->time == "09:00", "updateEvent no deberia tocar la hora de inicio");
+  check(!updated->endTime.has_value(), "updateEvent deberia poder borrar la hora de fin");
+}
+
 } // namespace
 
 int main() {
@@ -138,6 +162,7 @@ int main() {
     testCompletionIsPerConcreteDateNotPerTemplate();
     testDeleteEventCascadesCompletions();
     testMonthSummaryCombinesRecurringOneOffAndCompletions();
+    testStartAndEndTimeRoundTrip();
   } catch (const std::exception& e) {
     std::cerr << e.what() << std::endl;
     return 1;

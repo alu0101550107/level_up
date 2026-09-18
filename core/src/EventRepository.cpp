@@ -15,39 +15,48 @@ Event EventRepository::eventFromRow(Statement& stmt) {
   event.id = stmt.columnInt64(0);
   event.title = stmt.columnText(1);
   event.time = stmt.columnOptText(2);
-  event.dayOfWeek = stmt.columnOptInt(3);
-  event.specificDate = stmt.columnOptText(4);
+  event.endTime = stmt.columnOptText(3);
+  event.dayOfWeek = stmt.columnOptInt(4);
+  event.specificDate = stmt.columnOptText(5);
   return event;
 }
 
 int64_t EventRepository::createWeeklyEvent(int dayOfWeek, const std::string& title,
-                                            std::optional<std::string> time) {
+                                            std::optional<std::string> time,
+                                            std::optional<std::string> endTime) {
   auto stmt = db_.prepare(
-      "INSERT INTO events (title, time, day_of_week, specific_date) VALUES (?1, ?2, ?3, NULL)");
+      "INSERT INTO events (title, time, end_time, day_of_week, specific_date) "
+      "VALUES (?1, ?2, ?3, ?4, NULL)");
   stmt.bindText(1, title);
   stmt.bindOptText(2, time);
-  stmt.bindInt64(3, dayOfWeek);
+  stmt.bindOptText(3, endTime);
+  stmt.bindInt64(4, dayOfWeek);
   stmt.step();
   return db_.lastInsertRowId();
 }
 
 int64_t EventRepository::createOneOffEvent(const std::string& date, const std::string& title,
-                                            std::optional<std::string> time) {
+                                            std::optional<std::string> time,
+                                            std::optional<std::string> endTime) {
   auto stmt = db_.prepare(
-      "INSERT INTO events (title, time, day_of_week, specific_date) VALUES (?1, ?2, NULL, ?3)");
+      "INSERT INTO events (title, time, end_time, day_of_week, specific_date) "
+      "VALUES (?1, ?2, ?3, NULL, ?4)");
   stmt.bindText(1, title);
   stmt.bindOptText(2, time);
-  stmt.bindText(3, date);
+  stmt.bindOptText(3, endTime);
+  stmt.bindText(4, date);
   stmt.step();
   return db_.lastInsertRowId();
 }
 
 bool EventRepository::updateEvent(int64_t id, const std::string& title,
-                                   std::optional<std::string> time) {
-  auto stmt = db_.prepare("UPDATE events SET title = ?1, time = ?2 WHERE id = ?3");
+                                   std::optional<std::string> time,
+                                   std::optional<std::string> endTime) {
+  auto stmt = db_.prepare("UPDATE events SET title = ?1, time = ?2, end_time = ?3 WHERE id = ?4");
   stmt.bindText(1, title);
   stmt.bindOptText(2, time);
-  stmt.bindInt64(3, id);
+  stmt.bindOptText(3, endTime);
+  stmt.bindInt64(4, id);
   stmt.step();
   return db_.changes() > 0;
 }
@@ -60,7 +69,8 @@ bool EventRepository::deleteEvent(int64_t id) {
 }
 
 std::optional<Event> EventRepository::findById(int64_t id) {
-  auto stmt = db_.prepare("SELECT id, title, time, day_of_week, specific_date FROM events WHERE id = ?1");
+  auto stmt = db_.prepare(
+      "SELECT id, title, time, end_time, day_of_week, specific_date FROM events WHERE id = ?1");
   stmt.bindInt64(1, id);
   if (!stmt.step()) {
     return std::nullopt;
@@ -70,7 +80,7 @@ std::optional<Event> EventRepository::findById(int64_t id) {
 
 std::vector<Event> EventRepository::listWeeklyEvents(int dayOfWeek) {
   auto stmt = db_.prepare(
-      "SELECT id, title, time, day_of_week, specific_date FROM events "
+      "SELECT id, title, time, end_time, day_of_week, specific_date FROM events "
       "WHERE day_of_week = ?1 ORDER BY time IS NULL, time, id");
   stmt.bindInt64(1, dayOfWeek);
   std::vector<Event> result;
@@ -82,7 +92,7 @@ std::vector<Event> EventRepository::listWeeklyEvents(int dayOfWeek) {
 
 std::vector<Event> EventRepository::listAllWeeklyEvents() {
   auto stmt = db_.prepare(
-      "SELECT id, title, time, day_of_week, specific_date FROM events "
+      "SELECT id, title, time, end_time, day_of_week, specific_date FROM events "
       "WHERE day_of_week IS NOT NULL ORDER BY day_of_week, time IS NULL, time, id");
   std::vector<Event> result;
   while (stmt.step()) {
@@ -94,7 +104,7 @@ std::vector<Event> EventRepository::listAllWeeklyEvents() {
 std::vector<Event> EventRepository::listOneOffEvents(const std::string& fromDate,
                                                       const std::string& toDate) {
   auto stmt = db_.prepare(
-      "SELECT id, title, time, day_of_week, specific_date FROM events "
+      "SELECT id, title, time, end_time, day_of_week, specific_date FROM events "
       "WHERE specific_date BETWEEN ?1 AND ?2 ORDER BY specific_date, time IS NULL, time, id");
   stmt.bindText(1, fromDate);
   stmt.bindText(2, toDate);
@@ -108,7 +118,7 @@ std::vector<Event> EventRepository::listOneOffEvents(const std::string& fromDate
 std::vector<ResolvedEvent> EventRepository::eventsForDate(const std::string& date) {
   int weekday = DateUtils::isoWeekday(date);
   auto stmt = db_.prepare(
-      "SELECT e.id, e.title, e.time, e.day_of_week, e.specific_date, "
+      "SELECT e.id, e.title, e.time, e.end_time, e.day_of_week, e.specific_date, "
       "(c.event_id IS NOT NULL) AS done "
       "FROM events e "
       "LEFT JOIN completions c ON c.event_id = e.id AND c.occurrence_date = ?1 "
@@ -122,7 +132,7 @@ std::vector<ResolvedEvent> EventRepository::eventsForDate(const std::string& dat
     ResolvedEvent resolved;
     resolved.event = eventFromRow(stmt);
     resolved.occurrenceDate = date;
-    resolved.done = stmt.columnBool(5);
+    resolved.done = stmt.columnBool(6);
     result.push_back(std::move(resolved));
   }
   return result;

@@ -12,6 +12,7 @@ class DayEventListModel : public QAbstractListModel {
     IdRole = Qt::UserRole + 1,
     TitleRole,
     TimeRole,
+    EndTimeRole,
     DoneRole,
     IsRecurringRole,
   };

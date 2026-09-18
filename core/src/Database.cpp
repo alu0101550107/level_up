@@ -15,6 +15,20 @@ void throwIfError(sqlite3* db, int rc, const std::string& context) {
   }
 }
 
+// Para columnas añadidas despues del primer lanzamiento: CREATE TABLE IF
+// NOT EXISTS no altera una tabla que ya existe, asi que una base de datos
+// ya instalada en un dispositivo necesita un ALTER TABLE explicito -- pero
+// solo la primera vez, de ahi comprobar antes via PRAGMA table_info.
+bool hasColumn(Database& db, const std::string& table, const std::string& column) {
+  auto stmt = db.prepare("PRAGMA table_info(" + table + ")");
+  while (stmt.step()) {
+    if (stmt.columnText(1) == column) { // columna 1 = nombre
+      return true;
+    }
+  }
+  return false;
+}
+
 } // namespace
 
 // --- Statement ---------------------------------------------------------
@@ -163,6 +177,13 @@ void Database::migrate() {
       )
     );
   )sql");
+
+  // end_time se añadio en una version posterior del esquema -- ver el
+  // comentario de hasColumn() arriba sobre por que no basta con el
+  // CREATE TABLE de arriba para las bases de datos ya existentes.
+  if (!hasColumn(*this, "events", "end_time")) {
+    exec("ALTER TABLE events ADD COLUMN end_time TEXT;");
+  }
 
   exec(R"sql(
     CREATE INDEX IF NOT EXISTS idx_events_day_of_week

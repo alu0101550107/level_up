@@ -24,6 +24,17 @@ void testMigrateIsIdempotent() {
     ++tableCount;
   }
   check(tableCount == 2, "migrate() deberia crear exactamente las tablas events y completions");
+
+  // end_time se añade con un ALTER TABLE aparte (ver Database::migrate())
+  // -- migrate() dos veces no deberia intentar añadirla otra vez.
+  auto columns = db.prepare("PRAGMA table_info(events)");
+  bool hasEndTime = false;
+  while (columns.step()) {
+    if (columns.columnText(1) == "end_time") {
+      hasEndTime = true;
+    }
+  }
+  check(hasEndTime, "la tabla events deberia tener la columna end_time tras migrate()");
 }
 
 void testEventsCheckConstraintRejectsBothNull() {

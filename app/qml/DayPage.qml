@@ -176,14 +176,42 @@ Page {
                 Repeater {
                     model: backend.day.events
                     delegate: Item {
+                        id: eventItem
                         visible: model.time !== ""
-                        x: spine.x
-                        y: (visible ? page.timeToY(model.time) : 0) - 5
-                        width: 10
-                        height: 10
+                        x: 0
+                        y: 0
+                        width: parent.width
+                        height: parent.height
+
+                        readonly property bool hasDuration: visible && model.endTime !== ""
+                        readonly property real yStart: visible ? page.timeToY(model.time) : 0
+                        readonly property real yEnd: hasDuration ? page.timeToY(model.endTime) : yStart
+                        // Card mas alta cuanto mas dure el evento -- con un
+                        // minimo legible para eventos cortos o sin fin.
+                        readonly property real cardTop: hasDuration ? Math.min(yStart, yEnd) - 12 : yStart - 22
+                        readonly property real cardHeight: hasDuration
+                            ? Math.max(Math.abs(yStart - yEnd), 36) + 12
+                            : 44
+
+                        // Barra de duracion sobre la spine -- solo si hay
+                        // hora de fin, para visualizar de un vistazo cuanto
+                        // dura el evento (no solo cuando empieza).
+                        Rectangle {
+                            visible: eventItem.hasDuration
+                            x: spine.x - 1
+                            y: Math.min(eventItem.yStart, eventItem.yEnd)
+                            width: 4
+                            height: Math.abs(eventItem.yStart - eventItem.yEnd)
+                            radius: 2
+                            color: Theme.accent
+                            opacity: model.done ? 0.25 : 0.5
+                        }
 
                         Rectangle {
-                            anchors.fill: parent
+                            x: spine.x - 5
+                            y: eventItem.yStart - 5
+                            width: 10
+                            height: 10
                             radius: 5
                             color: model.done ? Theme.accent : Theme.background
                             border.color: Theme.accent
@@ -191,10 +219,10 @@ Page {
                         }
 
                         Rectangle {
-                            x: 20
-                            y: -22
-                            width: timelineFlick.width - spine.x - 32
-                            height: 44
+                            x: spine.x + 20
+                            y: eventItem.cardTop
+                            width: timelineFlick.width - spine.x - 40
+                            height: eventItem.cardHeight
                             radius: 8
                             color: Theme.surface
                             border.width: 1
@@ -216,7 +244,7 @@ Page {
                                         elide: Text.ElideRight
                                     }
                                     Label {
-                                        text: model.time
+                                        text: eventItem.hasDuration ? (model.time + " - " + model.endTime) : model.time
                                         color: Theme.textSecondary
                                         font.pixelSize: 11
                                     }

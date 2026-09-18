@@ -61,6 +61,7 @@ qt6_add_qml_module(levelup_app
     qml/DayPage.qml
     qml/MonthPage.qml
     qml/AddEventDialog.qml
+    qml/TimePickerDialog.qml
     qml/AccentColorPicker.qml
     qml/theme/Theme.qml
   RESOURCES

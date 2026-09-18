@@ -19,6 +19,8 @@ QVariant DayEventListModel::data(const QModelIndex& index, int role) const {
       return QString::fromStdString(resolved.event.title);
     case TimeRole:
       return resolved.event.time ? QString::fromStdString(*resolved.event.time) : QString();
+    case EndTimeRole:
+      return resolved.event.endTime ? QString::fromStdString(*resolved.event.endTime) : QString();
     case DoneRole:
       return resolved.done;
     case IsRecurringRole:
@@ -33,6 +35,7 @@ QHash<int, QByteArray> DayEventListModel::roleNames() const {
       {IdRole, "eventId"},
       {TitleRole, "title"},
       {TimeRole, "time"},
+      {EndTimeRole, "endTime"},
       {DoneRole, "done"},
       {IsRecurringRole, "isRecurring"},
   };

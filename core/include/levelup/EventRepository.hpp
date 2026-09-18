@@ -19,14 +19,15 @@ class EventRepository {
  public:
   explicit EventRepository(Database& db);
 
-  int64_t createWeeklyEvent(int dayOfWeek, const std::string& title,
-                             std::optional<std::string> time);
+  int64_t createWeeklyEvent(int dayOfWeek, const std::string& title, std::optional<std::string> time,
+                             std::optional<std::string> endTime);
   int64_t createOneOffEvent(const std::string& date, const std::string& title,
-                             std::optional<std::string> time);
+                             std::optional<std::string> time, std::optional<std::string> endTime);
 
   // Solo edita titulo/hora -- cambiar un evento de recurrente a puntual (o
   // viceversa) se modela como borrar+recrear, no como un update ambiguo.
-  bool updateEvent(int64_t id, const std::string& title, std::optional<std::string> time);
+  bool updateEvent(int64_t id, const std::string& title, std::optional<std::string> time,
+                    std::optional<std::string> endTime);
 
   // Borra el evento y, por el ON DELETE CASCADE de `completions`, todo su
   // historial de "hecho".

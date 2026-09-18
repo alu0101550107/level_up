@@ -18,13 +18,17 @@ class EditorController : public QObject {
  public:
   EditorController(levelup::EventRepository& repo, EventBus& bus, QObject* parent = nullptr);
 
-  Q_INVOKABLE void addWeeklyEvent(int dayOfWeek, const QString& title, const QString& time);
-  Q_INVOKABLE void addOneOffEvent(const QString& date, const QString& title, const QString& time);
-  Q_INVOKABLE void updateEvent(qlonglong id, const QString& title, const QString& time);
+  Q_INVOKABLE void addWeeklyEvent(int dayOfWeek, const QString& title, const QString& time,
+                                   const QString& endTime);
+  Q_INVOKABLE void addOneOffEvent(const QString& date, const QString& title, const QString& time,
+                                   const QString& endTime);
+  Q_INVOKABLE void updateEvent(qlonglong id, const QString& title, const QString& time,
+                                const QString& endTime);
   Q_INVOKABLE void deleteEvent(qlonglong id);
 
-  // { "title": string, "time": string (vacio si no tiene) } -- para
-  // precargar AddEventDialog en modo edicion. Mapa vacio si no existe.
+  // { "title": string, "time": string, "endTime": string } (vacios si no
+  // tienen) -- para precargar AddEventDialog en modo edicion. Mapa vacio
+  // si no existe.
   Q_INVOKABLE QVariantMap getEvent(qlonglong id) const;
 
  private:

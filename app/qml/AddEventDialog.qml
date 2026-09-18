@@ -17,6 +17,10 @@ Dialog {
 
     property int editingEventId: -1
     property bool isWeekly: true
+    property string startTime: ""
+    property string endTime: ""
+    // "start" | "end" -- que campo esta rellenando timePicker ahora mismo.
+    property string editingField: "start"
 
     readonly property var weekdayNames: [
         "Lunes", "Martes", "Miércoles", "Jueves", "Viernes", "Sábado", "Domingo"
@@ -26,7 +30,8 @@ Dialog {
         editingEventId = -1;
         isWeekly = true;
         titleField.text = "";
-        timeField.text = "";
+        startTime = "";
+        endTime = "";
         dateField.text = backend.day.currentDate;
         var jsDate = new Date(backend.day.currentDate);
         var isoWeekday = jsDate.getDay() === 0 ? 7 : jsDate.getDay();
@@ -38,17 +43,29 @@ Dialog {
         editingEventId = id;
         var data = backend.editor.getEvent(id);
         titleField.text = data.title || "";
-        timeField.text = data.time || "";
+        startTime = data.time || "";
+        endTime = data.endTime || "";
         open();
     }
 
     onAccepted: {
         if (editingEventId >= 0) {
-            backend.editor.updateEvent(editingEventId, titleField.text, timeField.text);
+            backend.editor.updateEvent(editingEventId, titleField.text, startTime, endTime);
         } else if (isWeekly) {
-            backend.editor.addWeeklyEvent(weekdayCombo.currentIndex + 1, titleField.text, timeField.text);
+            backend.editor.addWeeklyEvent(weekdayCombo.currentIndex + 1, titleField.text, startTime, endTime);
         } else {
-            backend.editor.addOneOffEvent(dateField.text, titleField.text, timeField.text);
+            backend.editor.addOneOffEvent(dateField.text, titleField.text, startTime, endTime);
+        }
+    }
+
+    TimePickerDialog {
+        id: timePicker
+        onTimeChosen: (time) => {
+            if (dialog.editingField === "start") {
+                dialog.startTime = time;
+            } else {
+                dialog.endTime = time;
+            }
         }
     }
 
@@ -178,13 +195,56 @@ Dialog {
             background: Rectangle { color: Theme.surfaceAlt; radius: 4 }
         }
 
-        TextField {
-            id: timeField
+        RowLayout {
             Layout.fillWidth: true
-            placeholderText: "HH:MM (opcional)"
-            color: Theme.textPrimary
-            placeholderTextColor: Theme.textSecondary
-            background: Rectangle { color: Theme.surfaceAlt; radius: 4 }
+            spacing: 8
+
+            Label { text: "Inicio"; color: Theme.textSecondary }
+            Button {
+                Layout.fillWidth: true
+                onClicked: {
+                    dialog.editingField = "start";
+                    timePicker.openWithTime(dialog.startTime);
+                }
+                contentItem: Text {
+                    text: dialog.startTime.length > 0 ? dialog.startTime : "Sin hora"
+                    color: dialog.startTime.length > 0 ? Theme.textPrimary : Theme.textSecondary
+                    horizontalAlignment: Text.AlignHCenter
+                }
+                background: Rectangle { color: Theme.surfaceAlt; radius: 4 }
+            }
+            ToolButton {
+                visible: dialog.startTime.length > 0
+                contentItem: Text { text: "✕"; color: Theme.textSecondary; horizontalAlignment: Text.AlignHCenter }
+                background: Rectangle { color: "transparent" }
+                onClicked: dialog.startTime = ""
+            }
+        }
+
+        RowLayout {
+            Layout.fillWidth: true
+            spacing: 8
+
+            Label { text: "Fin"; color: Theme.textSecondary }
+            Button {
+                Layout.fillWidth: true
+                onClicked: {
+                    dialog.editingField = "end";
+                    timePicker.openWithTime(dialog.endTime);
+                }
+                contentItem: Text {
+                    text: dialog.endTime.length > 0 ? dialog.endTime : "Sin hora"
+                    color: dialog.endTime.length > 0 ? Theme.textPrimary : Theme.textSecondary
+                    horizontalAlignment: Text.AlignHCenter
+                }
+                background: Rectangle { color: Theme.surfaceAlt; radius: 4 }
+            }
+            ToolButton {
+                visible: dialog.endTime.length > 0
+                contentItem: Text { text: "✕"; color: Theme.textSecondary; horizontalAlignment: Text.AlignHCenter }
+                background: Rectangle { color: "transparent" }
+                onClicked: dialog.endTime = ""
+            }
         }
     }
 }
