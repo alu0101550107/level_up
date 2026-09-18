@@ -1,0 +1,47 @@
+<?xml version="1.0"?>
+<!--
+Copia propia (no la que genera Qt por defecto) para poder fijar el nombre
+de paquete y la etiqueta de la app de verdad. El resto es boilerplate
+obligatorio de la integracion de Qt con Android: no tocar sin comprobar
+contra una version nueva de Qt.
+
+Sin ningun <uses-permission>: la app no usa red, biometria, ni
+notificaciones -- la base de datos SQLite vive en el almacenamiento
+privado de la app (QStandardPaths::AppDataLocation en main.cpp), que no
+necesita permiso alguno.
+-->
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    package="com.levelup.app"
+    android:installLocation="auto"
+    android:versionCode="1"
+    android:versionName="0.1">
+    <application
+        android:name="org.qtproject.qt.android.bindings.QtApplication"
+        android:hardwareAccelerated="true"
+        android:label="Level Up"
+        android:icon="@mipmap/ic_launcher"
+        android:roundIcon="@mipmap/ic_launcher"
+        android:allowBackup="true"
+        android:fullBackupOnly="false">
+        <activity
+            android:name="org.qtproject.qt.android.bindings.QtActivity"
+            android:configChanges="orientation|uiMode|screenLayout|screenSize|smallestScreenSize|layoutDirection|locale|fontScale|keyboard|keyboardHidden|navigation|mcc|mnc|density"
+            android:label="Level Up"
+            android:launchMode="singleTop"
+            android:screenOrientation="unspecified"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+
+            <meta-data
+                android:name="android.app.lib_name"
+                android:value="levelup_app" />
+
+            <meta-data
+                android:name="android.app.arguments"
+                android:value="" />
+        </activity>
+    </application>
+</manifest>

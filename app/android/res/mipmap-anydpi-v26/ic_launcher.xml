@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Icono adaptativo (Android 8+): el sistema recorta esto en circulo,
+     cuadrado redondeado, etc segun el launcher del fabricante, asi que el
+     contenido real (ver ic_launcher_foreground.png) esta generado con
+     margen de sobra (zona segura ~66% del lienzo) para no cortarse pase
+     lo que pase. -->
+<adaptive-icon xmlns:android="http://schemas.android.com/apk/res/android">
+    <background android:drawable="@color/ic_launcher_background"/>
+    <foreground android:drawable="@mipmap/ic_launcher_foreground"/>
+</adaptive-icon>

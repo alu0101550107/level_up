@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Mismo negro que Theme.background (ver app/qml/theme/Theme.qml):
+         capa de fondo del icono adaptativo. -->
+    <color name="ic_launcher_background">#05070a</color>
+</resources>
