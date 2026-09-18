@@ -15,12 +15,7 @@ DayController::DayController(levelup::EventRepository& repo, EventBus& bus, QObj
 
 QString DayController::currentDate() const { return currentDate_.toString(Qt::ISODate); }
 
-QString DayController::currentDateLabel() const {
-  if (currentDate_ == QDate::currentDate()) {
-    return QStringLiteral("Hoy");
-  }
-  return currentDate_.toString("dddd d MMMM");
-}
+QString DayController::currentDateLabel() const { return currentDate_.toString("dddd d MMMM"); }
 
 void DayController::toggleCompletion(qlonglong eventId) {
   std::string date = currentDate().toStdString();
