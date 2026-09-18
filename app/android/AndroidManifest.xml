@@ -5,8 +5,8 @@ de paquete y la etiqueta de la app de verdad. El resto es boilerplate
 obligatorio de la integracion de Qt con Android: no tocar sin comprobar
 contra una version nueva de Qt.
 
-Sin ningun <uses-permission>: la app no usa red, biometria, ni
-notificaciones -- la base de datos SQLite vive en el almacenamiento
+Sin ningun permiso declarado: la app no usa red, biometria, ni
+notificaciones. La base de datos SQLite vive en el almacenamiento
 privado de la app (QStandardPaths::AppDataLocation en main.cpp), que no
 necesita permiso alguno.
 -->
