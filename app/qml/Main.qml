@@ -10,6 +10,22 @@ ApplicationWindow {
     title: "Level Up"
     color: Theme.background
 
+    function todayIso() {
+        return Qt.formatDate(new Date(), "yyyy-MM-dd");
+    }
+
+    // El gesto/boton de "atras" de Android dispara este cierre por
+    // defecto -- si se habia llegado a un dia distinto de hoy (p.ej.
+    // tocando una celda del mes), la primera vez que se va "atras" se
+    // interpreta como "vuelve a hoy" en vez de salir de la app. Solo si ya
+    // se estaba en hoy se deja cerrar de verdad.
+    onClosing: (closeEvent) => {
+        if (backend.day.currentDate !== todayIso()) {
+            closeEvent.accepted = false;
+            backend.day.goToToday();
+        }
+    }
+
     // Tocar una celda del mes cambia la fecha de Dia (eso ya lo hace
     // AppBackend en C++, ver el connect en AppBackend.cpp) y ademas
     // cambia de pestaña -- eso es puramente de UI, vive aqui.

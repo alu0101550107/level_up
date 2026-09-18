@@ -11,7 +11,7 @@ Dialog {
     id: picker
     modal: true
     anchors.centerIn: parent
-    width: Math.min(parent ? parent.width - 40 : 300, 300)
+    width: Math.min(parent ? parent.width - 40 : 320, 320)
 
     // Color de entrada/salida: se fija antes de abrir (Theme.accent) y se
     // lee tras aceptar (ver Main.qml).
@@ -58,6 +58,28 @@ Dialog {
                 text: "Cancelar"
                 color: Theme.textPrimary
                 horizontalAlignment: Text.AlignHCenter
+            }
+            background: Rectangle {
+                color: "transparent"
+                border.color: Theme.textSecondary
+                border.width: 1
+                radius: 4
+            }
+        }
+        Button {
+            id: resetButton
+            Layout.fillWidth: true
+            Layout.margins: 8
+            onClicked: {
+                r = Theme.defaultAccent.r;
+                g = Theme.defaultAccent.g;
+                b = Theme.defaultAccent.b;
+            }
+            contentItem: Text {
+                text: "Por defecto"
+                color: Theme.textPrimary
+                horizontalAlignment: Text.AlignHCenter
+                wrapMode: Text.WordWrap
             }
             background: Rectangle {
                 color: "transparent"
